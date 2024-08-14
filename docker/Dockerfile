@@ -1,21 +1,23 @@
 FROM clojure:latest
+RUN apt-get update
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 RUN chmod -R 777 /root/
 
-# Install npm+dependencies
-ENV NODE_VERSION=19.6.0
-RUN apt update && apt install -y curl
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-ENV NVM_DIR=/root/.nvm
-RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
-ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/apt/sources.list.d/debian.sources
+RUN sed -i 's/security.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/apt/sources.list.d/debian.sources
+RUN sed -i 's/security-cdn.debian.org/mirrors.tuna.tsinghua.edu.cn/' /etc/apt/sources.list.d/debian.sources
+RUN apt clean
+RUN apt update 
+
+RUN apt-get update && apt-get install -y \
+      npm \
+      nodejs;
 COPY package.json /usr/src/app/
 COPY package-lock.json /usr/src/app/
+RUN npm config set registry https://registry.npmmirror.com/
 RUN npm ci
 
 # Install clojure dependencies
